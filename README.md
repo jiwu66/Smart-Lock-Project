@@ -2,14 +2,17 @@
 - [Project Details](#project-details)
   * [Components](#components)
     + [MCU](#mcu)
-    + [Fingerprint Module](#sub-sub-heading-2)
-  * [Design Schematic](#sub-heading-2)
-- [Code](#heading-2)
-  * [Driver files](#sub-heading-3)
-    + [AS608](#sub-sub-heading-3)
-    + [OLED](#sub-sub-heading-4)
-    + [4x4 Keyboard](#sub-sub-heading-5)
-    + [Step Motor](#sub-sub-heading-6)
+    + [Fingerprint Module](#fingerprint-module)
+    + [OLED Module](#oled-module)
+    + [Keyboard Module](#keyboard-module)
+    + [Step Motor Module](#step-motor-module)
+  * [Design Schematic](#design-schematic)
+- [Code](#code)
+  * [Driver files](#driver-files)
+    + [AS608](#as608)
+    + [OLED](#oled)
+    + [4x4 Keyboard](#4x4-keyboard)
+    + [Step Motor](#step-motor)
 
 
 # Heading levels
@@ -39,9 +42,22 @@ I used **STM32F103VET6** as the MCU of this project. I used Keil as my developin
 ![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/ee96a469af56a7de4c5dc01b580b70b.jpg)
 
 #### Fingerprint Module
-I used AS608 for finger print module. AS608 communicxate with MCU using USART, it can read fingerprint, generate characteristic, store it in buffer, and compare two characteristic file.
+I used AS608 for finger print module. AS608 communicxate with MCU using **USART**, it can read fingerprint, generate characteristic, store it in buffer, and compare two characteristic file.
 
 ![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/AS608.jpg)
+
+#### Oled Module
+0.96 inch OLED screen that uses **I2C** to communicate with MCU. Will be used for UI.
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/oled.jpg)
+
+#### Keyboard Module
+A 4x4 button module will be used as the keyboard of the system.
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/keyboard.jpg)
+
+#### Step Motor Module
+A step motor module will be used to simulate the mechanical part of a actual lock. A ULN2003 Board is used to control the motor.
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/motor.jpg)
+### Design Schematic
 
 ## Code
 
