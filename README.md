@@ -43,7 +43,8 @@ The board contains one **SPI FLASH** the flash will be used in this project as w
 ![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/ee96a469af56a7de4c5dc01b580b70b.jpg)
 
 #### Fingerprint Module
-I used AS608 for finger print module. AS608 communicxate with MCU using **USART**, it can read fingerprint, generate characteristic, store it in buffer, and compare two characteristic file.\
+I used AS608 for finger print module. AS608 communicxate with MCU using **USART**, it can read fingerprint, generate characteristic, store it in buffer, and compare two characteristic file.
+
 **Pins Connection:**\
 RX:->PA2\
 TX:->PA3
@@ -51,7 +52,8 @@ TX:->PA3
 ![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/AS608.jpg)
 
 #### Oled Module
-0.96 inch OLED screen that uses **I2C** to communicate with MCU. Will be used for UI.\
+0.96 inch OLED screen that uses **I2C** to communicate with MCU. Will be used for UI.
+
 **Pins Connection:**\
 SCL:->PB6\
 SDA:->PB7
@@ -59,7 +61,8 @@ SDA:->PB7
 ![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/oled.jpg)
 
 #### Keyboard Module
-A 4x4 button module will be used as the keyboard of the system.\
+A 4x4 button module will be used as the keyboard of the system.
+
 **Pins Connection:**\
 C1:->PB8\
 C2:->PC6\
@@ -73,7 +76,8 @@ R4:->PB9
 ![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/keyboard.jpg)
 
 #### Step Motor Module
-A step motor module will be used to simulate the mechanical part of a actual lock. A ULN2003 Board is used to control the motor.\
+A step motor module will be used to simulate the mechanical part of a actual lock. A ULN2003 Board is used to control the motor.
+
 **Pins Connection:**\
 IN1:->PC8\
 IN2:->PC9\
