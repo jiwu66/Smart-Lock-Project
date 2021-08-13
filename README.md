@@ -44,7 +44,6 @@ The board contains one **SPI FLASH** the flash will be used in this project as w
 
 #### Fingerprint Module
 I used AS608 for finger print module. AS608 communicxate with MCU using **USART**, it can read fingerprint, generate characteristic, store it in buffer, and compare two characteristic file.\
-
 **Pins Connection:**\
 RX:->PA2\
 TX:->PA3
