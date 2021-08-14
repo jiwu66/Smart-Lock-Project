@@ -1,4 +1,12 @@
 - [Introduction](#introduction)
+- [Function Exhibion](#function-exhibition)
+    * [System Initialization](#system-initialization)
+    * [Admin Password Setting](#admin-password-setting)
+    * [Admin Mode Entering](#admin-mode-entering)
+    * [Fingerprint Recording](#fingerprint-recording)
+    * [Delete Fingerprints](#delete-fingerprints)
+    * [Changing Admin Password](#changing-admin-password)
+    * [Unlock by Scanning Fingerprint](#unlock-by-scanning-fingerprint)
 - [Project Details](#project-details)
   * [Components](#components)
     + [MCU](#mcu)
@@ -13,7 +21,7 @@
     + [OLED](#oled)
     + [4x4 Keyboard](#4x4-keyboard)
     + [Step Motor](#step-motor)
-
+- [Conclusion and Possible Improvement](conclusion-and-possible-conclusion)
 
 # Heading levels
 
@@ -29,6 +37,46 @@ a 4x4 keyboard, a OLED screen, and a step motor. Details of each motor can be fo
 ![](image/Project.jpg)
 
 **(All project files and codes will be included in the prository)**
+
+## Function Exhibition
+This section demonstrate each function of the system
+
+### System Initialization
+Everytime the system is powered up, the system will check if an **admin password** has been set. If not, then it is the first-time using the system and it will ask user to set an admin password. After system initialization, it will enter **Main Menu**\
+The admin password is stored in **SPI Flash**, so that the **data will not be lost if power is shut down**. 
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/init.gif)
+
+### Admin Password Setting
+The system will ask user to set an admin password if it is the first-time using the system. The password should be 8-digit, a key board supporting number 0 - 9 is provided.\
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/password_setting.gif)
+
+### Admin Mode Entering
+Admin Mode can be entered by entering the correct Admin password.\
+Admin mode contains three functions:\
+**1.Add Fingerprint**
+**2.Delete Fingerprints**
+**3.Change Password**
+**4.Back to Menu**\
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/admin_mode1.gif)
+
+### Fingerprint Recording
+If **Add Fingerprint** is selected in Admin Mode, the system will ask the user to put the finger desired onto the fingerprint module to scan twice. The characteristic of the finger print will **only be generated and stored if the two scannig match each other**.\
+After characteristic has been generated, the user will be asked to enter an ID number to assign to the model.\
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/add_fp_p1.gif)
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/add_fp_p2.gif)
+
+### Delete Fingerprints
+If **Delete Fingerprints** has been selected in Admin Mode, the system will **delete all fingerprints stored**.\
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/delete_fp.gif)
+
+### Changing Admin Password
+If **Change Password** is selected in Admin Mode, the system will ask the user to set another password(8-digit).\
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/change_password.gif)
+
+### Unlock by Scanning Fingerprint
+If **Unlock** has been selected in Menu, the system will ask the user to put finger onto fingerprint module to scan. If the fingerprint match with any characteristic stored, it will unlock by controling the step motor.\
+The user **can press any key to exit to menu**.\
+![](https://github.com/jiwu66/Smart_Lock_Project/blob/main/image/unlcok.gif)
 
 ## Project Details:
 
@@ -101,3 +149,7 @@ This is an h1 heading
 
 #### Step Motor
 
+## Conclusion and Possible Improvement
+As a result, the project contains all functions required for a smart fingerprint lock.\
+I gained hands on project experience of using STM32 peripherals including GPIO, TIM, Systick. I also learned to use communication protocols like I2C, SPI, and USART to communicate with between MCU and other devices including AS608, OLED, and FLASH.\
+I used a developer board with STM32 MCU for this project, it is unecessary if I want to make it an actual product. The board takes up too much space and the system does not require so many pins. It can be improved by selecting a more suitable MCU(can still be STM32f103 series but with less pins). A PCB with much a smaller size can be designed, all modules can be attached on the PCB insted of connecting with wires. I could design a better power supply, the existing system uses USB for power supply, I should peobably use battery if I want to make it a product.
