@@ -21,7 +21,7 @@
     + [OLED](#oled)
     + [4x4 Keyboard](#4x4-keyboard)
     + [Step Motor](#step-motor)
-- [Conclusion and Possible Improvement](#conclusion-and-possible-improvemeent)
+- [Conclusion and Possible Improvement](#conclusion-and-possible-improvement)
 
 # Heading levels
 
