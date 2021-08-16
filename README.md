@@ -511,6 +511,8 @@ void unlock(void)
 **Based on the Driver Files, three functions of the system can be realized:**
 
 #### Record_FP
+Ask user to scan finger print two times and generate Char Files, compare the two files to validate the scannings. Create model and store in flash.
+
 ```ruby
 //Record_FP
 //Ask user to scan finger print two times and generate Char Files, compare the two files to validate the scannings. Create model and store in flash
@@ -672,7 +674,9 @@ void Record_FP(void)
 ```
 
 #### FP_unlock
-```
+Ask user to scan fingerprint, if the fingerprint is found in flash, unlock.
+
+```ruby
 //FP_Unlcok
 //Ask user to scan fingerprint, if the fingerprint is found in flash, unlock
 //Parameter:
@@ -744,7 +748,9 @@ void FP_unlock(void)
 ```
 
 #### FP_Delete
-```
+Delete all models in flash.
+
+```ruby
 //FP_Delete
 //Delete all models in flash
 //Parameter:
