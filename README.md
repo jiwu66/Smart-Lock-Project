@@ -21,6 +21,10 @@
     + [OLED](#oled)
     + [4x4 Keyboard](#4x4-keyboard)
     + [Step Motor](#step-motor)
+  * [Applications](#application)
+    + [Record_FP](#record-fp)
+    + [FP_unlock](#fp-unlock)
+    + [FP_Delete](#fp-delete)
 - [Conclusion and Possible Improvement](#conclusion-and-possible-improvement)
 
 # Heading levels
@@ -136,18 +140,644 @@ IN4:->PC11
 ### Design Schematic
 
 ## Code
-
-This is an h1 heading
+Code cna be found in "Driver_Files" and "main_and_interrupt_files" folders.\
+**StdPeriph** Library is not contained in the repo but an be found on the website of ST
 
 ### Driver files
 
 #### AS608
+USART2 on STM32F103VET6 is used to communicate with AS608 module, send command to, and receive data from the module.\
+
+**Send Command Packet to AS608:**
+```ruby
+//USART Send one byte
+static void MYUSART_SendData(u8 data)
+{
+  while((USART2->SR & 0X40) == 0);
+  USART2->DR = data;
+	
+}
+
+
+//Send Packet Head
+static void SendHead(void)
+{
+  MYUSART_SendData(0xEF);
+  MYUSART_SendData(0x01);
+}
+
+//Send Addr
+static void SendAddr(void)
+{
+  MYUSART_SendData(AS608Addr >> 24);
+  MYUSART_SendData(AS608Addr >> 16);
+  MYUSART_SendData(AS608Addr >> 8);
+  MYUSART_SendData(AS608Addr);
+}
+
+
+//Send Packet Flag
+static void SendFlag(u8 flag)
+{
+  MYUSART_SendData(flag);
+}
+
+//Send Packet Length
+static void SendLength(int length)
+{
+  MYUSART_SendData(length >> 8);
+  MYUSART_SendData(length);
+}
+
+//Send Command
+static void Sendcmd(u8 cmd)
+{
+  MYUSART_SendData(cmd);
+}
+
+//Send Checksum
+static void SendCheck(u16 check)
+{
+  MYUSART_SendData(check >> 8);
+  MYUSART_SendData(check);
+}
+```
+
+**AS608 Functions:**
+These functions need be realized by sending commands to AS608:
+```ruby
+void PS_StaGPIO_Init(void);//初始化PA6读状态引脚
+	
+u8 PS_GetImage(void); //Scan FingerPrint
+ 
+u8 PS_GenChar(u8 BufferID);//Generate Characteristic File
+
+u8 PS_Match(void);//Compare two Characteristic Files
+
+u8 PS_Search(u8 BufferID,u16 StartPage,u16 PageNum,SearchResult *p);//Search Fingerprint in Flash
+ 
+u8 PS_RegModel(void);//Merge two Characteristic Files
+ 
+u8 PS_StoreChar(u8 BufferID,u16 PageID);//Store model in flash
+
+u8 PS_DeletChar(u16 PageID,u16 N);//Delete Model in flash
+
+u8 PS_HighSpeedSearch(u8 BufferID,u16 StartPage,u16 PageNum);//High Speed Search Fingerprint in flash
+
+const char *EnsureMessage(u8 ensure);//Translate Ensure Code to text
+
+u8 PS_Empty(void);//Empty models in flash
+```
 
 #### OLED
+I2C1 is used to communicate with OLED
+**I2C1 initialization:**
+```ruby
+void iic_config(void)
+{
+	GPIO_InitTypeDef GPIO_InitStruct;
+	I2C_InitTypeDef I2C_InitStruct;
+	
+	RCC_APB2PeriphClockCmd(GPIO_CLK, ENABLE);
+	RCC_APB1PeriphClockCmd(I2C_CLK, ENABLE);
+	
+	GPIO_InitStruct.GPIO_Pin = I2C_SCL_Pin | I2C_SDA_Pin	;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	GPIO_SetBits(GPIO_PORT, I2C_SCL_Pin|I2C_SDA_Pin	);
+	
+	I2C_InitStruct.I2C_ClockSpeed = 100000;
+	I2C_InitStruct.I2C_Mode = I2C_Mode_I2C;
+	I2C_InitStruct.I2C_DutyCycle = I2C_DutyCycle_2;
+	I2C_InitStruct.I2C_OwnAddress1 = 0x7F;
+	I2C_InitStruct.I2C_Ack = I2C_Ack_Disable;
+	I2C_InitStruct.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+	I2C_Init(I2Cx, &I2C_InitStruct);
+	
+	I2C_Cmd(I2C1, ENABLE);
+}
+```
+
+**Use Hardware I2C to send Data Packet:**
+```ruby
+void I2C_Hard_Write_Byte(u8 addr, u8 Ctrl, u8 Data)
+{
+	I2C_GenerateSTART(I2C1, ENABLE);
+	while(SUCCESS != I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_MODE_SELECT));
+	I2C_Send7bitAddress(I2Cx, addr, I2C_Direction_Transmitter);
+	
+	while(SUCCESS != I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
+	I2C_SendData(I2Cx, Ctrl);
+	
+	while(SUCCESS != I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTING));
+	I2C_SendData(I2Cx, Data);
+	while(SUCCESS != I2C_CheckEvent(I2Cx, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
+	
+	I2C_GenerateSTOP(I2Cx, ENABLE);
+}
+```
+
+**OLED Operations:**
+```ruby
+void OLED_Write_Byte(u8 data, u8 DC);//Write Command or Data to OLED
+void OLED_Fill(unsigned char data);//Fill OLED
+void OLED_Init(void);//initialize OLED
+void OLED_Set_Pos(u8 x, u8 y);//Set start POS
+void OLED_ON(void);//Turn OLED ON
+void OLED_OFF(void);//Turn OLED OFF
+void OLED_Clear(void);//Clear OLED
+void OLED_ShowChar(u8 x, u8 y, u8 chr);//OLED Display Char
+u32 oled_pow(u8 m, u8 n);
+void OLED_ShowNum(u8 x, u8 y, u32 num, u8 len,u8 mode);//OLED Display Number
+void OLED_ShowStr(u8 x, u8 y, u8 *str);//Oled Display String
+```
 
 #### 4x4 Keyboard
+```ruby
+//GPIO_Config
+void key_config(void)
+{
+	GPIO_InitTypeDef	GPIO_InitStruct;
+	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOB, ENABLE);
+	
+	//Column Pins:
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_8;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6;
+	GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+	//GPIO_SetBits(GPIOB, GPIO_Pin_12 | GPIO_Pin_14 | GPIO_Pin_8);
+	//GPIO_SetBits(GPIOC, GPIO_Pin_6);
+	
+	//Row Pins:
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13 | GPIO_Pin_15 | GPIO_Pin_9;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_Init(GPIOB, &GPIO_InitStruct);
+	
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_7;
+	GPIO_Init(GPIOC, &GPIO_InitStruct);
+	
+	//GPIO_ResetBits(GPIOB, GPIO_Pin_13 | GPIO_Pin_15 | GPIO_Pin_9);
+	//GPIO_ResetBits(GPIOC, GPIO_Pin_7);
+}
 
+//row_scan
+//To detect which row was pressed
+//Parameter:
+//Return row number
+u8 row_scan(void)
+{
+	u8 key_row = 0;
+	
+	key_row = (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_13) << 3);
+	key_row = key_row | (GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15) << 2); 
+	key_row = key_row | (GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_7) << 1);
+	key_row = key_row | GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_9);
+	
+	if(key_row != 0x0f)
+	{
+		
+		SysTick_delay_ms(10);
+		if(key_row != 0x0f)	//If key_row is not 1111, at least one row is pressed.
+		{
+			if(key_row == 0x07)
+			{
+				return 1;
+			}
+			else if(key_row == 0x0B)
+			{
+				return 2;
+			}
+			else if(key_row == 0x0D)
+			{
+				return 3;
+			}
+			else if(key_row == 0x0E)
+			{
+				return 4;
+			}
+			else return 0;
+		}
+		
+		else return 0;
+
+	}
+	else return 0;
+	
+}
+
+
+//key_scan
+//Pull up each column one by one to locate the position that is being pressed
+//Parameter:
+//Return the corresponding number on keyboard default 100
+u8 key_scan(void)
+{
+	u8 key_num = 100;
+	u8 row_num = 0;
+	
+	KEY_CLO0_OUT_LOW;
+	if((row_num = row_scan()) != 0)
+	{
+		while(row_scan() != 0);
+		key_num = ((row_num - 1)*3 + 1);
+	}
+	KEY_CLO0_OUT_HIGH;
+	
+	KEY_CLO1_OUT_LOW;
+	if((row_num = row_scan()) != 0)
+	{
+		while(row_scan() != 0);
+		
+		if(row_num == 4)
+		{
+			key_num = 0;;
+		}
+		else key_num = ((row_num - 1)*3 + 2);
+	}
+	KEY_CLO1_OUT_HIGH;
+	
+	KEY_CLO2_OUT_LOW;
+	if((row_num = row_scan()) != 0)
+	{
+		while(row_scan() != 0);
+		key_num = ((row_num - 1)*3 + 3);
+	}
+	KEY_CLO2_OUT_HIGH;
+	
+	KEY_CLO3_OUT_LOW;
+	if((row_num = row_scan()) != 0)
+	{
+		while(row_scan() != 0);
+		if(row_num == 4)
+		{
+			key_num = 16;
+		}
+		
+	}
+	KEY_CLO3_OUT_HIGH;
+	
+	if((key_num > 9) && (key_num != 16))
+	{
+		return 100;
+	}
+	
+	return key_num;
+}
+```
 #### Step Motor
+```ruby
+//GPIO_Config
+void motor_init(void)
+{
+	GPIO_InitTypeDef Motor_InitStruct;
+	
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+	
+	Motor_InitStruct.GPIO_Pin = IN1 | IN2 | IN3 | IN4;
+	Motor_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+	Motor_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+	
+	GPIO_Init(MOTOR_GPIO_PORT, &Motor_InitStruct);
+	
+}
+
+//motor_clkw
+//Generate a sequence to make the motor turn clockwise 
+//Parameter:
+void motor_clkw(void)
+{
+	GPIO_SetBits(MOTOR_GPIO_PORT, IN1);
+	SysTick_delay_ms(5);
+	GPIO_ResetBits(MOTOR_GPIO_PORT, IN1);
+	GPIO_SetBits(MOTOR_GPIO_PORT, IN2);
+	SysTick_delay_ms(5);
+	GPIO_ResetBits(MOTOR_GPIO_PORT, IN2);
+	GPIO_SetBits(MOTOR_GPIO_PORT, IN3);
+	SysTick_delay_ms(5);
+	GPIO_ResetBits(MOTOR_GPIO_PORT, IN3);
+	GPIO_SetBits(MOTOR_GPIO_PORT, IN4);
+	SysTick_delay_ms(5);
+	GPIO_ResetBits(MOTOR_GPIO_PORT, IN4);
+}
+
+//motor_ctclkw
+//Generate a sequence to make the motor turn counter clockwise
+//Parameter:
+void motor_ctclkw(void)
+{
+	GPIO_SetBits(MOTOR_GPIO_PORT, IN4);
+	SysTick_delay_ms(5);
+	GPIO_ResetBits(MOTOR_GPIO_PORT, IN4);
+	GPIO_SetBits(MOTOR_GPIO_PORT, IN3);
+	SysTick_delay_ms(5);
+	GPIO_ResetBits(MOTOR_GPIO_PORT, IN3);
+	GPIO_SetBits(MOTOR_GPIO_PORT, IN2);
+	SysTick_delay_ms(5);
+	GPIO_ResetBits(MOTOR_GPIO_PORT, IN2);
+	GPIO_SetBits(MOTOR_GPIO_PORT, IN1);
+	SysTick_delay_ms(5);
+	GPIO_ResetBits(MOTOR_GPIO_PORT, IN1);
+}
+
+//unlock
+//Make the motor turn counter clockwise, stop for a moment, and turn counter-clockwise. This simulate the Mechanical part of a lock.
+//Parameter:
+void unlock(void)
+{
+	int time;
+	for(time = 500; time != 0; time--)
+	{
+		motor_ctclkw();
+	}
+	
+	SysTick_delay_ms(5000);
+	
+	for(time = 500; time != 0; time--)
+	{
+		motor_clkw();
+	}
+}
+
+```
+
+### Applications
+**Based on the Driver Files, three functions of the system can be realized:**
+
+#### Record_FP
+```ruby
+//Record_FP
+//Ask user to scan finger print two times and generate Char Files, compare the two files to validate the scannings. Create model and store in flash
+//Parameter:
+void Record_FP(void)
+{
+	u8 state = 0;
+	u8 conf = 0;
+	u8 ID = 0;
+	u8 key = 0;
+	u8 temp = 0;
+	u8 i = 0;
+	
+	while(1)
+	{
+		switch(state)
+		{
+			case 0:
+				OLED_ShowStr(0, 0, "Place Finger");
+				conf = PS_GetImage();//Fisttime scanning Fingerprint
+			
+				if(conf == 0x00)//If valid, generate Char File from it, else keep scanning
+				{
+					//OLED_ShowStr(0,0,"scanned");
+					
+					PS_GenChar(BufferID1);
+
+					if(conf == 0x00)//If Char File generation OK, go to the sencond scanning state
+					{
+						OLED_Clear();
+						OLED_ShowStr(0, 0, "Scanned");
+						OLED_ShowStr(0, 2, "Remove Finger");
+						SysTick_delay_ms(1000);
+						OLED_Clear();
+						
+						state = 1;
+					}
+					else 
+					{
+					ShowErrMessage(conf);
+					}
+				}
+				else ShowErrMessage(conf);
+				break;
+				
+			case 1:			
+				OLED_ShowStr(0, 0, "Place Finger Again");
+				conf = PS_GetImage();//Second Finger print scanning
+				if(conf == 0x00)//If valid, generate Char File from it, else keep scanning
+				{
+					conf = PS_GenChar(BufferID2);							
+					
+					if(conf == 0x00)//If Char File generation OK, go to the Char Files Comparing state
+					{
+						OLED_Clear();
+						OLED_ShowStr(0, 0, "Scanned");
+						OLED_ShowStr(0, 2, "Remove Finger");
+						SysTick_delay_ms(1000);
+						state = 2;
+					}
+					else ShowErrMessage(conf);
+				}
+				else ShowErrMessage(conf);
+				break;
+				
+			case 2:
+				OLED_ShowStr(0,0, "Comparing");
+				SysTick_delay_ms(1000);
+				conf = PS_Match();//Compare Char Files generated from the two fingerprint scanning
+				if(conf == 0x00)//If two files match, go to model creating state, else restart the whole process
+				{
+					OLED_Clear();
+					OLED_ShowStr(0,0,"Matched");
+					SysTick_delay_ms(1000);
+					state = 3;
+				}
+				else
+				{
+					OLED_Clear();
+					OLED_ShowStr(0,0, "Failed");
+					ShowErrMessage(conf);
+					SysTick_delay_ms(1000);
+					
+					state = 0;
+				}
+				break;
+				
+			case 3:
+				OLED_ShowStr(0,0, "Processing");
+			
+				conf = PS_RegModel();//Create model from the teo Char Files
+				if(conf == 0x00)//If valid, go to model storing state, else restart the whole process
+				{
+					OLED_ShowStr(0,0, "Model Created");
+					
+					OLED_Clear();
+					state = 4;
+				}
+				else 
+				{
+					ShowErrMessage(conf);
+					state = 0;
+				}
+				break;
+				
+			case 4:
+				OLED_ShowStr(0, 0, "Enter Model ID");			
+				OLED_ShowStr(0, 2, "0 - 99");
+				
+				
+				while(1)//Ask the user to enter an ID number for the model, from 0 - 99, press enter to confirm
+				{
+					temp = key_scan();
+					if(temp < 10)
+					{
+						if(i == 0)
+						{
+							key += temp;
+							OLED_ShowNum(0,4,temp,1,1);
+							i++;
+						}
+						else if(i == 1)
+						{
+							key = key*10 + temp;
+							OLED_ShowNum(8,4,temp,1,1);
+							i++;
+						}
+					}
+					else if(temp == 16)
+					{
+						break;
+					}
+				}
+				
+				ID = key;
+				
+				OLED_Clear();
+				OLED_ShowNum(1,3,ID,2,1);
+				SysTick_delay_ms(1000);
+				
+				conf = PS_StoreChar(BufferID2, ID);//Store model in flash
+				if(conf == 0x00)
+				{
+					OLED_Clear();
+					OLED_ShowStr(0, 0, "FP Adding");
+					OLED_ShowStr(0, 2, "SUCCESS");
+					SysTick_delay_ms(1000);
+					OLED_Clear();
+					return;
+				}
+				else ShowErrMessage(conf);
+				
+				break;
+		}
+		
+		
+	}
+}
+```
+
+#### FP_unlock
+```
+//FP_Unlcok
+//Ask user to scan fingerprint, if the fingerprint is found in flash, unlock
+//Parameter:
+void FP_unlock(void)
+{
+	u8 conf = 0;
+	u8 key = 0;
+	
+	while(1)
+	{
+		key = key_scan();
+		if(key != 100)//if any key is pressed, the program terminates
+		{
+			break;
+		}
+		
+		OLED_ShowStr(0,0, "Scan Finger");
+		
+		conf = PS_GetImage();//Ask user to scan fingerprint
+		if(conf == 0x00)
+		{
+			conf = PS_GenChar(BufferID1);//Generate Char File
+			
+			if(conf == 0x00)
+			{
+				conf = PS_HighSpeedSearch(BufferID1, 0, 99);//Search flash based on the Char File
+				
+				if(conf == 0x00)//If a model in flash match with the Char File, unlock
+				{
+				//Unlock
+					OLED_Clear();
+					OLED_ShowStr(0,0, "Matched");
+					OLED_ShowStr(0,2, "Unlocked");
+					
+					unlock();
+					//SysTick_delay_ms(1000);
+					OLED_Clear();
+					
+					break;
+				}
+				
+				else
+				{
+					OLED_Clear();
+					OLED_ShowStr(0,0, "Failed");
+					ShowErrMessage(conf);
+					SysTick_delay_ms(1000);
+					OLED_Clear();
+				}
+				
+			}
+			else
+			{
+				OLED_Clear();
+				OLED_ShowStr(0,0, "Failed");
+				ShowErrMessage(conf);
+				SysTick_delay_ms(1000);
+				OLED_Clear();
+			}
+			
+		}
+		else
+		{
+			ShowErrMessage(conf);
+		}
+		
+	}
+}
+```
+
+#### FP_Delete
+```
+//FP_Delete
+//Delete all models in flash
+//Parameter:
+void FP_Delete(void)
+{
+	u8 key = 0;
+	OLED_Clear();
+	OLED_ShowStr(0,0,"Format System?");
+	OLED_ShowStr(0,2, "1.YES");
+	OLED_ShowStr(0,4, "2.NO");
+	
+	while(1)
+	{
+		key = key_scan();
+		if(key == 1)//Is user confirms deleting models, delete all models
+		{
+			OLED_Clear();
+			PS_Empty();
+			OLED_Clear();
+			OLED_ShowStr(0,0, "SUCCESS");
+			SysTick_delay_ms(1000);
+			break;
+		}
+		else if(key == 2)
+		{
+			OLED_Clear();
+			break;
+		}
+		
+	}
+	
+}
+```
 
 ## Conclusion and Possible Improvement
 As a result, the project contains all functions required for a smart fingerprint lock.\
