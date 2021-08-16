@@ -21,10 +21,10 @@
     + [OLED](#oled)
     + [4x4 Keyboard](#4x4-keyboard)
     + [Step Motor](#step-motor)
-  * [Applications](#application)
-    + [Record_FP](#record-fp)
-    + [FP_unlock](#fp-unlock)
-    + [FP_Delete](#fp-delete)
+  * [Applications](#applications)
+    + [Record_FP](#record_fp)
+    + [FP_unlock](#fp_unlock)
+    + [FP_Delete](#fp_delete)
 - [Conclusion and Possible Improvement](#conclusion-and-possible-improvement)
 
 # Heading levels
